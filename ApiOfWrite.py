@@ -100,18 +100,18 @@ def SendEmail(a,subject,content):
 #修改excel(这函数分离好像意义不大)
 #api-获取itemid: https://graph.microsoft.com/v1.0/me/drive/root/search(q='.xlsx')?select=name,id,webUrl
 def excelWrite(a,filesname,sheet):
+    print('    添加工作表')
     url=r'https://graph.microsoft.com/v1.0/me/drive/root:/AutoApi/App'+str(a)+r'/'+filesname+r':/workbook/worksheets/add'
     data={
          "name": sheet
          }
-    print('    添加工作表')
     apiReq('post',a,url,json.dumps(data))
+    print('    添加表格')
     url=r'https://graph.microsoft.com/v1.0/me/drive/root:/AutoApi/App'+str(a)+r'/'+filesname+r':/workbook/worksheets/'+sheet+r'/tables/add'
     data={
          "address": "A1:D8",
          "hasHeaders": False
          }
-    print('    添加表格')
     jsontxt=json.loads(apiReq('post',a,url,json.dumps(data)))
     print('    添加行')
     url=r'https://graph.microsoft.com/v1.0/me/drive/root:/AutoApi/App'+str(a)+r'/'+filesname+r':/workbook/tables/'+jsontxt['id']+r'/rows/add'
@@ -125,50 +125,70 @@ def excelWrite(a,filesname,sheet):
     apiReq('post',a,url,json.dumps(data))
     
 def taskWrite(a,taskname):
+    print("    创建任务列表")
     url=r'https://graph.microsoft.com/v1.0/me/todo/lists'
     data={
          "displayName": taskname
          }
-    print("    创建任务列表")
     listjson=json.loads(apiReq('post',a,url,json.dumps(data)))
+    print("    创建任务")
     url=r'https://graph.microsoft.com/v1.0/me/todo/lists/'+listjson['id']+r'/tasks'
     data={
          "title": taskname,
          }
-    print("    创建任务")
     taskjson=json.loads(apiReq('post',a,url,json.dumps(data)))
-    url=r'https://graph.microsoft.com/v1.0/me/todo/lists/'+listjson['id']+r'/tasks/'+taskjson['id']
     print("    删除任务")
+    url=r'https://graph.microsoft.com/v1.0/me/todo/lists/'+listjson['id']+r'/tasks/'+taskjson['id']
     apiReq('delete',a,url)
-    url=r'https://graph.microsoft.com/v1.0/me/todo/lists/'+listjson['id']
     print("    删除任务列表")
+    url=r'https://graph.microsoft.com/v1.0/me/todo/lists/'+listjson['id']
     apiReq('delete',a,url)    
     
 def teamWrite(a,channelname):
-    url=r'https://graph.microsoft.com/v1.0/me/joinedTeams'
-    print("    获取team")
-    jsontxt = json.loads(apiReq('get',a,url))
-    objectlist=jsontxt['value']
-    #创建
-    print("    创建team频道")
+    #新建team
+    print('    新建team')
+    url=r'https://graph.microsoft.com/v1.0/teams'
     data={
+         "template@odata.bind": "https://graph.microsoft.com/v1.0/teamsTemplates('standard')",
          "displayName": channelname,
-         "description": "This channel is where we debate all future architecture plans",
-         "membershipType": "standard"
+         "description": "My Sample Team’s Description"
          }
-    url=r'https://graph.microsoft.com/v1.0/teams/'+objectlist[0]['id']+r'/channels'
-    jsontxt = json.loads(apiReq('post',a,url,json.dumps(data)))
-    url=r'https://graph.microsoft.com/v1.0/teams/'+objectlist[0]['id']+r'/channels/'+jsontxt['id']
-    print("    删除team频道")
-    apiReq('delete',a,url)
-
+    apiReq('post',a,url,json.dumps(data))
+    print("    获取team信息")
+    url=r'https://graph.microsoft.com/v1.0/me/joinedTeams'
+    teamlist = json.loads(apiReq('get',a,url))
+    for teamcount in range(teamlist['@odata.count']):
+        if teamlist['value'][teamcount]['displayName'] == channelname:
+            #创建频道
+            print("    创建team频道")
+            data={
+                 "displayName": channelname,
+                 "description": "This channel is where we debate all future architecture plans",
+                 "membershipType": "standard"
+                 }
+            url=r'https://graph.microsoft.com/v1.0/teams/'+teamlist['value'][teamcount]['id']+r'/channels'
+            jsontxt = json.loads(apiReq('post',a,url,json.dumps(data)))
+            url=r'https://graph.microsoft.com/v1.0/teams/'+teamlist['value'][teamcount]['id']+r'/channels/'+jsontxt['id']
+            print("    删除team频道")
+            apiReq('delete',a,url)
+            #删除teams
+            print("    删除team")
+            url=r'https://graph.microsoft.com/v1.0/groups/'+teamlist['value'][teamcount]['id']
+            apiReq('delete',a,url)  
+            
 def onenoteWrite(a,notename):
+    print('    创建笔记本')
     url=r'https://graph.microsoft.com/v1.0/me/onenote/notebooks'
     data={
-         "displayName": notename
+         "displayName": notename,
          }
-    print('    创建笔记本')
     notetxt = json.loads(apiReq('post',a,url,json.dumps(data)))
+    print('    创建笔记本分区')
+    url=r'https://graph.microsoft.com/v1.0/me/onenote/notebooks/'+notetxt['id']+r'/sections'
+    data={
+         "displayName": notename,
+         }
+    apiReq('post',a,url,json.dumps(data))
     print('    删除笔记本')
     url=r'https://graph.microsoft.com/v1.0/me/drive/root:/Notebooks/'+notename
     apiReq('delete',a,url)
@@ -190,7 +210,7 @@ for a in range(1, int(app_num)+1):
     print('发送邮件 ( 邮箱单独运行，每次运行只发送一次，防止封号 )')
     if emailaddress != '':
         SendEmail(a,'weather',weather)
-        print('')
+print('')
 #其他api
 for _ in range(1,config['rounds']+1):
     if config['rounds_delay'][0] == 1:

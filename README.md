@@ -1,5 +1,5 @@
-# AutoApi v6.0 ———— E5自动续期
-AutoApi系列：~~AutoApi(v1.0)~~、~~AutoApiSecret(v2.0)~~、~~AutoApiSR(v3.0)~~、~~AutoApiS(v4.0)~~、~~AutoApiP(v5.0)~~、AutoApi(v6.0)
+# AutoApi v6.1 (2021-2-10) ———— E5自动续期
+AutoApi系列：~~AutoApi(v1.0)~~、~~AutoApiSecret(v2.0)~~、~~AutoApiSR(v3.0)~~、~~AutoApiS(v4.0)~~、~~AutoApiP(v5.0)~~
 
 ## 说明 ##
 * E5自动续期程序，但是**不保证续期**
@@ -49,15 +49,18 @@ AutoApi系列：~~AutoApi(v1.0)~~、~~AutoApiSecret(v2.0)~~、~~AutoApiSR(v3.0)~
     * 4）点击左边管理的**API权限**，点击+**添加权限**，点击常用Microsoft API里的**Microsoft Graph**(就是那个蓝色水晶)，
     点击**委托的权限**，然后在下面的条例选中下列需要的权限，最后点击底部**添加权限**
     
-    **赋予api权限的时候，选择以下12个**
+    **赋予api权限的时候，选择以下13个**
   
                 Calendars.ReadWrite、Contacts.ReadWrite、Directory.ReadWrite.All、
                 
-                Files.ReadWrite.All、MailboxSettings.ReadWrite、Mail.ReadWrite、
+                Files.ReadWrite.All、Group.ReadWrite.All、MailboxSettings.ReadWrite、
                 
-                Mail.Send、Notes.ReadWrite.All、People.Read.All、
+                Mail.ReadWrite、Mail.Send、Notes.ReadWrite.All、
                 
-                Sites.ReadWrite.All、Tasks.ReadWrite、User.ReadWrite.All
+                People.Read.All、Sites.ReadWrite.All、Tasks.ReadWrite、
+                
+                User.ReadWrite.All
+                               
     
     ![image](https://github.com/wangziyingwen/ImageHosting/blob/master/AutoApiP/creatapp5.png)
     
