@@ -77,7 +77,7 @@ def apiReq(method,a,url,data='QAQ'):
             break
             #操作成功跳出循环
         else:
-            if retry_ == 3 and posttext.status_code >= 300:
+            if retry_ == 3:
                 print('        操作失败')
 #    if posttext.status_code > 300:
 #        print('        操作失败')

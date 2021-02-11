@@ -90,7 +90,7 @@ def runapi(apilist,a):
                 print('    第'+str(apilist[b])+"号api调用成功")
                 break
             else:
-                if apiget.status_code != 200 and retry_ == 3:
+                if retry_ == 3:
                     print('    pass')
         if config['api_delay'][0] == 1:
             time.sleep(random.randint(config['api_delay'][1],config['api_delay'][2]))
