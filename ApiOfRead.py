@@ -82,11 +82,16 @@ def runapi(apilist,a):
             'Authorization': 'bearer ' + access_token,
             'Content-Type': 'application/json'
             }
-    for b in range(len(apilist)):	
-        if req.get(api_list[apilist[b]],headers=headers).status_code == 200:
-            print('第'+str(apilist[b])+"号api调用成功")
-        else:
-            print("pass")
+    #重试
+    for b in range(len(apilist)):
+        for retry_ in range(4):
+            apiget=req.get(api_list[apilist[b]],headers=headers)
+            if apiget.status_code == 200:
+                print('    第'+str(apilist[b])+"号api调用成功")
+                break
+            else:
+                if apiget.status_code != 200 and retry_ == 3:
+                    print('    pass')
         if config['api_delay'][0] == 1:
             time.sleep(random.randint(config['api_delay'][1],config['api_delay'][2]))
 

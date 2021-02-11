@@ -63,18 +63,22 @@ def apiReq(method,a,url,data='QAQ'):
             'Authorization': 'bearer ' + access_token,
             'Content-Type': 'application/json'
             }
-    if method == 'post':
-        posttext=req.post(url,headers=headers,data=data)
-    elif method == 'put':
-        posttext=req.put(url,headers=headers,data=data)
-    elif method == 'delete':
-        posttext=req.delete(url,headers=headers)
-    else :
-        posttext=req.get(url,headers=headers)
-    if posttext.status_code < 300:
-        print('        操作成功')
-    else:
-        print('        操作失败')
+    for retry_ in range(4):        
+        if method == 'post':
+            posttext=req.post(url,headers=headers,data=data)
+        elif method == 'put':
+            posttext=req.put(url,headers=headers,data=data)
+        elif method == 'delete':
+            posttext=req.delete(url,headers=headers)
+        else :
+            posttext=req.get(url,headers=headers)
+        if posttext.status_code < 300:
+            print('        操作成功')
+            break
+            #操作成功跳出循环
+        else:
+            if retry_ == 3 and posttext.status_code >= 300:
+                print('        操作失败')
 #    if posttext.status_code > 300:
 #        print('        操作失败')
 #        #成功不提示
@@ -230,7 +234,7 @@ for _ in range(1,config['rounds']+1):
                 xlssheet.write(s1,s2,str(random.randint(1,600)))
         xls.close()
         xlspath=sys.path[0]+r'/'+filesname
-        print('上传文件 ( 可能会偶尔出现创建上传失败的情况 ) ')
+        print('上传文件')
         with open(xlspath,'rb') as f:
             UploadFile(a,filesname,f)
         choosenum = random.sample(range(1, 5),2)
