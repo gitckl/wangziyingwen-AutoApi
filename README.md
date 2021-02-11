@@ -1,4 +1,4 @@
-# AutoApi v6.1 (2021-2-10) ———— E5自动续期
+# AutoApi v6.2 (2021-2-11) ———— E5自动续期
 AutoApi系列：~~AutoApi(v1.0)~~、~~AutoApiSecret(v2.0)~~、~~AutoApiSR(v3.0)~~、~~AutoApiS(v4.0)~~、~~AutoApiP(v5.0)~~
 
 ## 说明 ##
