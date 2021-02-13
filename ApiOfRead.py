@@ -64,18 +64,27 @@ def getmstoken(ms_token,appnum):
         'client_secret':client_secret,
         'redirect_uri':'http://localhost:53682/'
         }
-    html = req.post('https://login.microsoftonline.com/common/oauth2/v2.0/token',data=data,headers=headers)
+    for retry_ in range(4):
+        html = req.post('https://login.microsoftonline.com/common/oauth2/v2.0/token',data=data,headers=headers)
+        if html.status_code < 300:
+            print(r'账号/应用 '+str(appnum)+' 的微软密钥获取成功')
+            break
+        else:
+            if retry_ == 3:
+                print(r'账号/应用 '+str(appnum)+' 的微软密钥获取失败\n'+'请检查secret里 CLIENT_ID , CLIENT_SECRET , MS_TOKEN 格式与内容是否正确，然后重新设置')
     jsontxt = json.loads(html.text)
-    if 'refresh_token' in jsontxt:
-        print(r'账号/应用 '+str(appnum)+' 的微软密钥获取成功')
-    else:
-        print(r'账号/应用 '+str(appnum)+' 的微软密钥获取失败'+'\n'+'请检查secret里 CLIENT_ID , CLIENT_SECRET , MS_TOKEN 格式与内容是否正确，然后重新设置')
     refresh_token = jsontxt['refresh_token']
     access_token = jsontxt['access_token']
     return access_token
+    
+#延时
+def timeDelay(xdelay):
+    if config[xdelay][0] == 1:
+        time.sleep(random.randint(config[xdelay][1],config[xdelay][2]))
 
 #调用函数
 def runapi(apilist,a):
+    timeDelay('api_delay')
     localtime = time.asctime( time.localtime(time.time()) )
     access_token=access_token_list[a-1]
     headers={
@@ -92,8 +101,6 @@ def runapi(apilist,a):
             else:
                 if retry_ == 3:
                     print('    pass')
-        if config['api_delay'][0] == 1:
-            time.sleep(random.randint(config['api_delay'][1],config['api_delay'][2]))
 
 #一次性获取access_token，降低获取率
 for a in range(1, int(app_num)+1):
@@ -114,14 +121,12 @@ final_list=fixed_api
 #实际运行
 if int(app_num) > 1:
     print('多账户/应用模式下，日志报告里可能会出现一堆***，属于正常情况')
-print("如果api数量少于规定值，则是api赋权没有弄好，或者是onedrive还没有初始化成功。前者请重新赋权并获取微软密钥替换，后者请稍等几天")
+print("如果api数量少于规定值，则是api赋权没有弄好，或者是onedrive还没有初始化成功。前者请重新赋权，后者请稍等几天")
 print('共 '+str(app_num)+r' 账号/应用，'+r'每个账号/应用 '+str(config['rounds'])+' 轮') 
 for r in range(1,config['rounds']+1):
-    if config['rounds_delay'][0] == 1:
-        time.sleep(random.randint(config['rounds_delay'][1],config['rounds_delay'][2]))		
+    timeDelay('rounds_delay')
     for a in range(1, int(app_num)+1):
-        if config['app_delay'][0] == 1:
-            time.sleep(random.randint(config['app_delay'][1],config['app_delay'][2]))
+        timeDelay('app_delay')
         client_id=os.getenv('CLIENT_ID_'+str(a))
         client_secret=os.getenv('CLIENT_SECRET_'+str(a))
         print('\n'+'应用/账号 '+str(a)+' 的第'+str(r)+'轮 '+time.asctime(time.localtime(time.time()))+'\n')

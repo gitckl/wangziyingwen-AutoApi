@@ -41,23 +41,26 @@ def getmstoken(ms_token,appnum):
         'client_secret':client_secret,
         'redirect_uri':'http://localhost:53682/'
         }
-    html = req.post('https://login.microsoftonline.com/common/oauth2/v2.0/token',data=data,headers=headers)
-    jsontxt = json.loads(html.text)
-    if 'refresh_token' in jsontxt:
-        print(r'账号/应用 '+str(appnum)+' 的微软密钥获取成功')
-    else:
-        print(r'账号/应用 '+str(appnum)+' 的微软密钥获取失败\n'+'请检查secret里 CLIENT_ID , CLIENT_SECRET , MS_TOKEN 格式与内容是否正确，然后重新设置')
+    for retry_ in range(4):
+        html = req.post('https://login.microsoftonline.com/common/oauth2/v2.0/token',data=data,headers=headers)
+        if html.status_code < 300:
+            print(r'账号/应用 '+str(appnum)+' 的微软密钥获取成功')
+            break
+        else:
+            if retry_ == 3:
+                print(r'账号/应用 '+str(appnum)+' 的微软密钥获取失败\n'+'请检查secret里 CLIENT_ID , CLIENT_SECRET , MS_TOKEN 格式与内容是否正确，然后重新设置')
+    jsontxt = json.loads(html.text)       
     refresh_token = jsontxt['refresh_token']
     access_token = jsontxt['access_token']
     return access_token
 
-#api延时
-def apiDelay():
-    if config['api_delay'][0] == 1:
-        time.sleep(random.randint(config['api_delay'][1],config['api_delay'][2]))
+#延时
+def timeDelay(xdelay):
+    if config[xdelay][0] == 1:
+        time.sleep(random.randint(config[xdelay][1],config[xdelay][2]))
         
 def apiReq(method,a,url,data='QAQ'):
-    apiDelay()
+    timeDelay('api_delay')
     access_token=access_token_list[a-1]
     headers={
             'Authorization': 'bearer ' + access_token,
@@ -86,13 +89,13 @@ def apiReq(method,a,url,data='QAQ'):
           
 
 #上传文件到onedrive(小于4M)
-def UploadFile(a,filesname,f):
+def uploadFile(a,filesname,f):
     url=r'https://graph.microsoft.com/v1.0/me/drive/root:/AutoApi/App'+str(a)+r'/'+filesname+r':/content'
     apiReq('put',a,url,f)
     
         
 # 发送邮件到自定义邮箱
-def SendEmail(a,subject,content):
+def sendEmail(a,subject,content):
     url=r'https://graph.microsoft.com/v1.0/me/sendMail'
     mailmessage={'message': {'subject': subject,
                              'body': {'contentType': 'Text', 'content': content},
@@ -213,16 +216,14 @@ for a in range(1, int(app_num)+1):
     print('账号 '+str(a))
     print('发送邮件 ( 邮箱单独运行，每次运行只发送一次，防止封号 )')
     if emailaddress != '':
-        SendEmail(a,'weather',weather)
+        sendEmail(a,'weather',weather)
 print('')
 #其他api
 for _ in range(1,config['rounds']+1):
-    if config['rounds_delay'][0] == 1:
-        time.sleep(random.randint(config['rounds_delay'][1],config['rounds_delay'][2]))     
+    timeDelay('rounds_delay')  
     print('第 '+str(_)+' 轮\n')        
     for a in range(1, int(app_num)+1):
-        if config['app_delay'][0] == 1:
-            time.sleep(random.randint(config['app_delay'][1],config['app_delay'][2]))        
+        timeDelay('app_delay')    
         print('账号 '+str(a))    
         #生成随机名称
         filesname='QAQ'+str(random.randint(1,600))+r'.xlsx'
@@ -236,7 +237,7 @@ for _ in range(1,config['rounds']+1):
         xlspath=sys.path[0]+r'/'+filesname
         print('上传文件')
         with open(xlspath,'rb') as f:
-            UploadFile(a,filesname,f)
+            uploadFile(a,filesname,f)
         choosenum = random.sample(range(1, 5),2)
         if config['allstart'] == 1 or 1 in choosenum:
             print('excel文件操作')
