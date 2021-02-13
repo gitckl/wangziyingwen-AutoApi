@@ -20,13 +20,18 @@ key_id='wangziyingwen'
 
 #公钥获取
 def getpublickey(Auth,geturl):
-    headers={'Accept': 'application/vnd.github.v3+json','Authorization': Auth}
-    html = req.get(geturl,headers=headers)
+    headers={
+            'Accept': 'application/vnd.github.v3+json','Authorization': Auth
+            }
+    for retry_ in range(4):
+        html = req.get(geturl,headers=headers)
+        if html.status_code < 300:
+            print("公钥获取成功")
+            break
+        else:
+            if retry_ == 3:
+                print("公钥获取失败，请检查secret里 GH_TOKEN 格式与设置是否正确")
     jsontxt = json.loads(html.text)
-    if 'key' in jsontxt:
-        print("公钥获取成功")
-    else:
-        print("公钥获取失败，请检查secret里 GH_TOKEN 格式与设置是否正确")
     public_key = jsontxt['key']
     global key_id 
     key_id = jsontxt['key_id']
@@ -34,20 +39,26 @@ def getpublickey(Auth,geturl):
 
 #微软refresh_token获取
 def getmstoken(ms_token,appnum):
-    headers={'Content-Type':'application/x-www-form-urlencoded'
+    headers={
+            'Content-Type':'application/x-www-form-urlencoded'
             }
-    data={'grant_type': 'refresh_token',
-          'refresh_token': ms_token,
-          'client_id':client_id,
-          'client_secret':client_secret,
-          'redirect_uri':'http://localhost:53682/'
+    data={
+         'grant_type': 'refresh_token',
+         'refresh_token': ms_token,
+         'client_id':client_id,
+         'client_secret':client_secret,
+         'redirect_uri':'http://localhost:53682/'
          }
-    html = req.post('https://login.microsoftonline.com/common/oauth2/v2.0/token',data=data,headers=headers)
+    for retry_ in range(4):
+        html = req.post('https://login.microsoftonline.com/common/oauth2/v2.0/token',data=data,headers=headers)
+        #json.dumps失败
+        if html.status_code < 300:
+            print(r'账号/应用 '+str(appnum)+' 的微软密钥获取成功')
+            break
+        else:
+            if retry_ == 3:
+                print(r'账号/应用 '+str(appnum)+' 的微软密钥获取失败'+'\n'+'请检查secret里 CLIENT_ID , CLIENT_SECRET , MS_TOKEN 格式与内容是否正确，然后重新设置')
     jsontxt = json.loads(html.text)
-    if 'refresh_token' in jsontxt:
-        print(r'账号/应用 '+str(appnum)+' 的微软密钥获取成功')
-    else:
-        print(r'账号/应用 '+str(appnum)+' 的微软密钥获取失败'+'\n'+'请检查secret里 CLIENT_ID , CLIENT_SECRET , MS_TOKEN 格式与内容是否正确，然后重新设置')
     refresh_token = jsontxt['refresh_token']
     access_token = jsontxt['access_token']
     return refresh_token
@@ -62,14 +73,23 @@ def createsecret(public_key,secret_value):
 
 #token上传
 def setsecret(encrypted_value,key_id,puturl,appnum):
-    headers={'Accept': 'application/vnd.github.v3+json','Authorization': Auth}
-    #data={'encrypted_value': encrypted_value,'key_id': key_id}  ->400error
-    data_str=r'{"encrypted_value":"'+encrypted_value+r'",'+r'"key_id":"'+key_id+r'"}'
-    putstatus=req.put(puturl,headers=headers,data=data_str)
-    if putstatus.status_code >= 300:
-        print(r'账号/应用 '+str(appnum)+' 的微软密钥上传失败，请检查secret里 GH_TOKEN 格式与设置是否正确')
-    else:
-        print(r'账号/应用 '+str(appnum)+' 的微软密钥上传成功')
+    headers={
+            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': Auth
+            }
+    data={
+         'encrypted_value': encrypted_value,
+         'key_id': key_id
+         }
+    #data_str=r'{"encrypted_value":"'+encrypted_value+r'",'+r'"key_id":"'+key_id+r'"}'
+    for retry_ in range(4):
+        putstatus=req.put(puturl,headers=headers,data=json.dumps(data))
+        if putstatus.status_code < 300:
+            print(r'账号/应用 '+str(appnum)+' 的微软密钥上传成功')
+            break
+        else:
+            if retry_ == 3:
+                print(r'账号/应用 '+str(appnum)+' 的微软密钥上传失败，请检查secret里 GH_TOKEN 格式与设置是否正确')        
     return putstatus
     
 #调用 
